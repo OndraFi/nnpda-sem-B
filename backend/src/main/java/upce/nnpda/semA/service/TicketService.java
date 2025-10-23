@@ -3,6 +3,7 @@ package upce.nnpda.semA.service;
 import org.springframework.stereotype.Service;
 import upce.nnpda.semA.domain.Project;
 import upce.nnpda.semA.domain.Ticket;
+import upce.nnpda.semA.domain.TicketVersion;
 import upce.nnpda.semA.domain.User;
 import upce.nnpda.semA.dto.ticket.TicketRequestDto;
 import upce.nnpda.semA.dto.ticket.TicketResponseDto;
@@ -11,6 +12,7 @@ import upce.nnpda.semA.exception.NotFoundException;
 import upce.nnpda.semA.exception.OwnershipException;
 import upce.nnpda.semA.repository.ProjectRepository;
 import upce.nnpda.semA.repository.TicketRepository;
+import upce.nnpda.semA.repository.TicketVersionRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,10 +22,12 @@ public class TicketService {
 
     TicketRepository ticketRepository;
     ProjectRepository projectRepository;
+    TicketVersionRepository ticketVersionRepository;
 
-    public TicketService(TicketRepository ticketRepository, ProjectRepository projectRepository) {
+    public TicketService(TicketRepository ticketRepository, ProjectRepository projectRepository, TicketVersionRepository ticketVersionRepository) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
+        this.ticketVersionRepository = ticketVersionRepository;
     }
 
     public List<TicketResponseDto> findAllTicketsByProject(Long projectId, User user) {
@@ -43,6 +47,15 @@ public class TicketService {
         Ticket ticket = ticketRequest.toTicket();
         ticket.setProject(project);
         this.ticketRepository.save(ticket);
+
+        TicketVersion version = new TicketVersion();
+        version.setTicket(ticket);
+        version.setType(ticket.getType());
+        version.setPriority(ticket.getPriority());
+        version.setTitle(ticket.getTitle());
+        version.setState(ticket.getState());
+        this.ticketVersionRepository.save(version);
+
         project.getTickets().add(ticket);
         this.projectRepository.save(project);
         return ticket.toDto();
@@ -93,6 +106,14 @@ public class TicketService {
         if (!(ticket.getProject().getId() == project.getId())) {
             throw new OwnershipException("Ticket does not belong to this project");
         }
+
+        TicketVersion version = new TicketVersion();
+        version.setTicket(ticket);
+        version.setTitle(ticketRequest.getTitle());
+        version.setState(ticketRequest.getState());
+        version.setType(ticketRequest.getType());
+        version.setPriority(ticketRequest.getPriority());
+        this.ticketVersionRepository.save(version);
 
         ticket.setTitle(ticketRequest.getTitle());
         ticket.setType(ticketRequest.getType());

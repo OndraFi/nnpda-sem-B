@@ -8,6 +8,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import upce.nnpda.semA.dto.ticket.TicketResponseDto;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Data
 @Entity
 @NoArgsConstructor
@@ -34,12 +37,24 @@ public class Ticket {
     @Enumerated(EnumType.STRING)
     private TicketState state = TicketState.OPEN;
 
+    @NonNull
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
+    @OneToMany(mappedBy = "ticket", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Comment> comments;
+
+    @OneToMany(mappedBy = "ticket", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Attachment> attachments;
+
+    @OneToMany(mappedBy = "ticket", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<TicketVersion> versions;
+
     public TicketResponseDto toDto() {
-        return new TicketResponseDto(this.id, this.title,this.type, this.priority, this.state);
+        return new TicketResponseDto(this.id, this.title,this.type, this.priority, this.state, this.versions);
     }
 
 }

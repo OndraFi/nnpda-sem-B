@@ -6,6 +6,9 @@ import lombok.Setter;
 import upce.nnpda.semA.domain.TicketPriority;
 import upce.nnpda.semA.domain.TicketState;
 import upce.nnpda.semA.domain.TicketType;
+import upce.nnpda.semA.domain.TicketVersion;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,4 +19,5 @@ public class TicketResponseDto {
     private TicketType type;
     private TicketPriority priority;
     private TicketState state;
+    private List<TicketVersion> versions;
 }
