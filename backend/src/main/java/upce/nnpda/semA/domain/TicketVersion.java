@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import upce.nnpda.semA.dto.ticketVersion.TicketVersionResponseDto;
 
 import java.time.LocalDateTime;
 
@@ -40,8 +41,11 @@ public class TicketVersion {
     @NonNull
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = false)
     private Ticket ticket;
 
+    public TicketVersionResponseDto toDto(){
+        return new TicketVersionResponseDto(this.id,this.title, this.type, this.priority, this.state,this.createdAt);
+    }
 }

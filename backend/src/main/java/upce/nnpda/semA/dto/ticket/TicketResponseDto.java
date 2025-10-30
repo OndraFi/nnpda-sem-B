@@ -7,6 +7,7 @@ import upce.nnpda.semA.domain.TicketPriority;
 import upce.nnpda.semA.domain.TicketState;
 import upce.nnpda.semA.domain.TicketType;
 import upce.nnpda.semA.domain.TicketVersion;
+import upce.nnpda.semA.dto.ticketVersion.TicketVersionResponseDto;
 
 import java.util.List;
 
@@ -19,5 +20,5 @@ public class TicketResponseDto {
     private TicketType type;
     private TicketPriority priority;
     private TicketState state;
-    private List<TicketVersion> versions;
+    private List<TicketVersionResponseDto> versions;
 }

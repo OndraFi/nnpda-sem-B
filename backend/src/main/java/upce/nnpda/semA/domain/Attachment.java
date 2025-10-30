@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import upce.nnpda.semA.dto.attachment.AttachmentResponseDto;
 
 import java.time.LocalDateTime;
 
@@ -19,15 +20,15 @@ public class Attachment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = true)
     private Project project;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = true)
     private Ticket ticket;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -46,5 +47,9 @@ public class Attachment {
 
     @NonNull
     private LocalDateTime createdAt;
+
+    public AttachmentResponseDto toDto(){
+        return new AttachmentResponseDto(fileData, fileName, fileType, fileSize, createdAt, user.getEmail());
+    }
 
 }

@@ -62,7 +62,7 @@ public class CommentService {
 
         Comment comment = new Comment();
         comment.setComment(req.getComment());
-        comment.setProject(project);
+        comment.setTicket(ticket);
         comment.setUser(user);
         this.commentRepository.save(comment);
         return comment;

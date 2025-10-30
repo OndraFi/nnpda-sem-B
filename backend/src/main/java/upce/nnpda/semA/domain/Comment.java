@@ -38,7 +38,7 @@ public class Comment {
     private String comment;
 
     @NonNull
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public CommentResponseDto toDto(){
         return new CommentResponseDto(this.id, this.comment, this.createdAt, this.user.getEmail());

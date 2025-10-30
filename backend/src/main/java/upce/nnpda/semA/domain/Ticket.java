@@ -54,7 +54,7 @@ public class Ticket {
     private List<TicketVersion> versions;
 
     public TicketResponseDto toDto() {
-        return new TicketResponseDto(this.id, this.title,this.type, this.priority, this.state, this.versions);
+        return new TicketResponseDto(this.id, this.title,this.type, this.priority, this.state, this.versions.stream().map(TicketVersion::toDto).toList());
     }
 
 }
