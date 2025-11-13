@@ -21,4 +21,6 @@ public class TicketUpdateRequestDto {
 
     @NotNull(message = "State cannot be null")
     private TicketState state;
+
+    private Long assignedUserId;
 }

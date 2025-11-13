@@ -47,6 +47,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Comment> comments;
 
+    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Ticket> assignedTickets;
+
     @Override
     public String toString() {
         return "User{" +

@@ -14,6 +14,7 @@ import upce.nnpda.semA.repository.ProjectRepository;
 import upce.nnpda.semA.repository.TicketRepository;
 import upce.nnpda.semA.repository.TicketVersionRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,11 +24,13 @@ public class TicketService {
     TicketRepository ticketRepository;
     ProjectRepository projectRepository;
     TicketVersionRepository ticketVersionRepository;
+    UserService userService;
 
-    public TicketService(TicketRepository ticketRepository, ProjectRepository projectRepository, TicketVersionRepository ticketVersionRepository) {
+    public TicketService(TicketRepository ticketRepository, ProjectRepository projectRepository, TicketVersionRepository ticketVersionRepository, UserService userService) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
         this.ticketVersionRepository = ticketVersionRepository;
+        this.userService = userService;
     }
 
     public List<TicketResponseDto> findAllTicketsByProject(Long projectId, User user) {
@@ -56,8 +59,8 @@ public class TicketService {
         version.setState(ticket.getState());
         this.ticketVersionRepository.save(version);
 
-        project.getTickets().add(ticket);
-        this.projectRepository.save(project);
+        // protože nestahuju nově ticket z db, musím přidat verzi ručně
+        ticket.getVersions().add(version);
         return ticket.toDto();
     }
 
@@ -66,11 +69,13 @@ public class TicketService {
                 () -> new NotFoundException("Ticket not found")
         );
         Project project = this.projectRepository.findOneById(projectId).orElseThrow(() -> new NotFoundException("Project not found"));
-        if (!(project.getUser().getId() == user.getId())) {
-            throw new OwnershipException("Project does not belong to the user");
+        if(ticket.getAssignedUser() == null || ticket.getAssignedUser().getId() != user.getId()) {
+            if (!(project.getUser().getId() == user.getId())) {
+                throw new OwnershipException("Project does not belong to the user");
+            }
         }
 
-        if (!ticket.getProject().equals(project)) {
+        if (ticket.getProject().getId() != project.getId()) {
             throw new OwnershipException("Ticket does not belong to this project");
         }
         return ticket.toDto();
@@ -99,8 +104,10 @@ public class TicketService {
         );
 
         Project project = this.projectRepository.findOneById(projectId).orElseThrow(() -> new NotFoundException("Project not found"));
-        if (!(project.getUser().getId() == user.getId())) {
-            throw new OwnershipException("Project does not belong to the user");
+        if(ticket.getAssignedUser() == null || ticket.getAssignedUser().getId() != user.getId()) {
+            if (!(project.getUser().getId() == user.getId())) {
+                throw new OwnershipException("Project does not belong to the user");
+            }
         }
 
         if (!(ticket.getProject().getId() == project.getId())) {
@@ -113,11 +120,18 @@ public class TicketService {
         version.setState(ticketRequest.getState());
         version.setType(ticketRequest.getType());
         version.setPriority(ticketRequest.getPriority());
-        this.ticketVersionRepository.save(version);
 
         ticket.setTitle(ticketRequest.getTitle());
         ticket.setType(ticketRequest.getType());
         ticket.setState(ticketRequest.getState());
+        ticket.setUpdatedAt(LocalDateTime.now());
+        if(ticketRequest.getAssignedUserId() != null) {
+            User assignedUser = this.userService.findById(ticketRequest.getAssignedUserId());
+            assignedUser.setId(ticketRequest.getAssignedUserId());
+            ticket.setAssignedUser(assignedUser);
+        }
+        this.ticketVersionRepository.save(version);
+        ticket.getVersions().add(version);
         return this.ticketRepository.save(ticket).toDto();
     }
 }

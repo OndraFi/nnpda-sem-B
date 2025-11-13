@@ -7,8 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import upce.nnpda.semA.dto.ticket.TicketResponseDto;
+import upce.nnpda.semA.dto.user.UserResponseDto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -41,6 +43,10 @@ public class Ticket {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @ManyToOne
+    @JoinColumn(name = "assignedUser_id", nullable = true)
+    private User assignedUser = null;
+
+    @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
@@ -51,10 +57,14 @@ public class Ticket {
     private List<Attachment> attachments;
 
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<TicketVersion> versions;
+    private List<TicketVersion> versions = new ArrayList<>();
 
     public TicketResponseDto toDto() {
-        return new TicketResponseDto(this.id, this.title,this.type, this.priority, this.state, this.versions.stream().map(TicketVersion::toDto).toList());
+        UserResponseDto assignedUserDto = null;
+        if(this.assignedUser != null) {
+         assignedUserDto = this.assignedUser.toResponseDto();
+        }
+        return new TicketResponseDto(this.id, this.title,this.type, this.priority, this.state, assignedUserDto,this.project.getId(), this.versions.stream().map(TicketVersion::toDto).toList());
     }
 
 }

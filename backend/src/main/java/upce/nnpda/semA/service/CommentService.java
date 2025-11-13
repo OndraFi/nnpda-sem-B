@@ -49,12 +49,16 @@ public class CommentService {
     }
 
     public Comment addForTicket(Long projectId, Long ticketId, User user, @Valid CommentRequestDto req) {
+        Ticket ticket = this.ticketRepository.findOneById(ticketId).orElseThrow(() -> new NotFoundException("Ticket not found"));
+
         Project project = this.projectRepository.findOneById(projectId).orElseThrow(() -> new NotFoundException("Project not found"));
-        if (!(project.getUser().getId() == user.getId())) {
-            throw new OwnershipException("Project does not belong to the user");
+        if (ticket.getAssignedUser() == null || ticket.getAssignedUser().getId() != user.getId()) {
+            if (!(project.getUser().getId() == user.getId())) {
+                throw new OwnershipException("Project does not belong to the user");
+            }
+
         }
 
-        Ticket ticket = this.ticketRepository.findOneById(ticketId).orElseThrow(() -> new NotFoundException("Ticket not found"));
 
         if (!(ticket.getProject().getId() == project.getId())) {
             throw new OwnershipException("Ticket does not belong to the project");
@@ -69,12 +73,16 @@ public class CommentService {
     }
 
     public List<Comment> listForTicket(Long projectId, Long ticketId, User user) {
-        Project project = this.projectRepository.findOneById(projectId).orElseThrow(() -> new NotFoundException("Project not found"));
-        if (!(project.getUser().getId() == user.getId())) {
-            throw new OwnershipException("Project does not belong to the user");
+        Ticket ticket = this.ticketRepository.findOneById(ticketId).orElseThrow(() -> new NotFoundException("Ticket not found"));
+
+        Project project =
+                this.projectRepository.findOneById(projectId).orElseThrow(() -> new NotFoundException("Project not found"));
+        if (ticket.getAssignedUser() == null || ticket.getAssignedUser().getId() != user.getId()) {
+            if (!(project.getUser().getId() == user.getId())) {
+                throw new OwnershipException("Project does not belong to the user");
+            }
         }
 
-        Ticket ticket = this.ticketRepository.findOneById(ticketId).orElseThrow(() -> new NotFoundException("Ticket not found"));
 
         if (!(ticket.getProject().getId() == project.getId())) {
             throw new OwnershipException("Ticket does not belong to the project");
@@ -100,7 +108,7 @@ public class CommentService {
         }
 
         Comment comment = commentRepository.findOneById(commentId).orElseThrow(() -> new NotFoundException("Comment not found"));
-        if(!(comment.getUser().getId() == user.getId())){
+        if (!(comment.getUser().getId() == user.getId())) {
             throw new OwnershipException("Comment does not belong to the user");
         }
 

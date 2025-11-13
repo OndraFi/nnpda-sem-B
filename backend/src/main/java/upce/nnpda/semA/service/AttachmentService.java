@@ -129,13 +129,17 @@ public class AttachmentService {
     }
 
     public List<Attachment> listForTicket(Long projectId, Long ticketId, User user) {
-        Project project = projectRepository.findOneById(projectId)
-                .orElseThrow(() -> new NotFoundException("Project not found"));
-        if (project.getUser().getId() != user.getId()) {
-            throw new OwnershipException("Project does not belong to the user");
-        }
         Ticket ticket = ticketRepository.findOneById(ticketId)
                 .orElseThrow(() -> new NotFoundException("Ticket not found"));
+
+        Project project =
+                this.projectRepository.findOneById(projectId).orElseThrow(() -> new NotFoundException("Project not found"));
+        if (ticket.getAssignedUser() == null || ticket.getAssignedUser().getId() != user.getId()) {
+            if (!(project.getUser().getId() == user.getId())) {
+                throw new OwnershipException("Project does not belong to the user");
+            }
+        }
+
 
         if (ticket.getProject() == null || ticket.getProject().getId() != projectId) {
             throw new OwnershipException("Ticket does not belong to the project");
