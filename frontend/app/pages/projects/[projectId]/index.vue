@@ -68,6 +68,66 @@
       </form>
     </section>
 
+    <!-- Vyhledávání v Elasticu -->
+    <section class="border rounded bg-white p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <h2 class="font-semibold flex-1">Vyhledávání ticketů (Elasticsearch)</h2>
+        <input
+            v-model="searchQuery"
+            @keyup.enter="searchInElastic"
+            placeholder="Hledat v title…"
+            class="border rounded px-3 py-2 flex-1"
+        />
+        <button
+            class="px-4 py-2 bg-black text-white rounded disabled:opacity-50"
+            :disabled="searching || !searchQuery"
+            @click="searchInElastic"
+        >
+          {{ searching ? 'Hledám…' : 'Hledat' }}
+        </button>
+      </div>
+
+      <p v-if="searchError" class="text-sm text-red-600 mb-2">
+        {{ searchError }}
+      </p>
+
+      <div v-if="searchHits.length > 0" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100 text-left">
+          <tr>
+            <th class="p-2">Score</th>
+            <th class="p-2">Titulek</th>
+            <th class="p-2">Typ</th>
+            <th class="p-2">Priorita</th>
+            <th class="p-2">Stav</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr
+              v-for="hit in searchHits"
+              :key="hit._id"
+              class="border-t hover:bg-gray-50 cursor-pointer"
+              @click="$router.push(`/projects/${projectId}/tickets/${hit._source.id}`)"
+          >
+            <td class="p-2">{{ hit._score?.toFixed(2) }}</td>
+            <td class="p-2 underline">
+              <NuxtLink :to="`/projects/${projectId}/tickets/${hit._source.id}`">
+                {{ hit._source.title }}
+              </NuxtLink>
+            </td>
+            <td class="p-2">{{ hit._source.type }}</td>
+            <td class="p-2">{{ hit._source.priority }}</td>
+            <td class="p-2">{{ hit._source.state }}</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p v-else-if="searchQuery && !searching" class="text-sm text-gray-500">
+        Žádné výsledky.
+      </p>
+    </section>
+
     <!-- Tickety projektu -->
     <section class="border rounded bg-white p-4">
       <div class="flex items-center justify-between mb-2">
@@ -185,6 +245,7 @@
 
 <script lang="ts">
 import TicketGenerator from '~/components/TicketGenerator.vue'
+import axios from "axios"
 export default {
   components: { TicketGenerator },
   data() {
@@ -211,6 +272,10 @@ export default {
       },
       updatingProject: false,
       updateError: '',
+      searchQuery: '',
+      searchHits: [] as any[],
+      searching: false,
+      searchError: '',
     }
   },
   watch: {
@@ -293,6 +358,48 @@ export default {
         this.updatingProject = false
       }
     },
+    async searchInElastic() {
+      this.searchError = ''
+      this.searchHits = []
+
+      if (!this.searchQuery) return
+
+      try {
+        this.searching = true
+        const { data } = await axios.post(
+            'http://localhost:9200/app_tickets/_search',
+            {
+                query: {
+                  match: {
+                    title: this.searchQuery,
+                  },
+                },
+              // Pokud chceš filtrovat jen tickety z tohoto projektu:
+              //
+              // query: {
+              //   bool: {
+              //     must: [
+              //       { match: { title: this.searchQuery } },
+              //       { term: { projectId: this.projectId } }
+              //     ]
+              //   }
+              // }
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+        )
+
+        this.searchHits = data?.hits?.hits || []
+      } catch (e) {
+        console.error(e)
+        this.searchError = 'Vyhledávání v Elasticsearch selhalo'
+      } finally {
+        this.searching = false
+      }
+    }
   },
 }
 </script>

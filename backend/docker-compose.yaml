@@ -18,6 +18,10 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - http.cors.enabled=true #povolení cors
+      - http.cors.allow-origin="*"
+      - http.cors.allow-methods="OPTIONS,HEAD,GET,POST"
+      - http.cors.allow-headers="X-Requested-With,Content-Type,Content-Length"
     ports:
       - "9200:9200"
     ulimits:

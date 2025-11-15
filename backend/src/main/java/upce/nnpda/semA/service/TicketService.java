@@ -1,15 +1,13 @@
 package upce.nnpda.semA.service;
 
 import org.springframework.stereotype.Service;
-import upce.nnpda.semA.domain.Project;
-import upce.nnpda.semA.domain.Ticket;
-import upce.nnpda.semA.domain.TicketVersion;
-import upce.nnpda.semA.domain.User;
+import upce.nnpda.semA.domain.*;
 import upce.nnpda.semA.dto.ticket.TicketRequestDto;
 import upce.nnpda.semA.dto.ticket.TicketResponseDto;
 import upce.nnpda.semA.dto.ticket.TicketUpdateRequestDto;
 import upce.nnpda.semA.exception.NotFoundException;
 import upce.nnpda.semA.exception.OwnershipException;
+import upce.nnpda.semA.repository.DeletedTicketRepository;
 import upce.nnpda.semA.repository.ProjectRepository;
 import upce.nnpda.semA.repository.TicketRepository;
 import upce.nnpda.semA.repository.TicketVersionRepository;
@@ -25,12 +23,14 @@ public class TicketService {
     ProjectRepository projectRepository;
     TicketVersionRepository ticketVersionRepository;
     UserService userService;
+    DeletedTicketRepository deletedTicketRepository;
 
-    public TicketService(TicketRepository ticketRepository, ProjectRepository projectRepository, TicketVersionRepository ticketVersionRepository, UserService userService) {
+    public TicketService(TicketRepository ticketRepository, ProjectRepository projectRepository, TicketVersionRepository ticketVersionRepository, UserService userService, DeletedTicketRepository deletedTicketRepository) {
         this.ticketRepository = ticketRepository;
         this.projectRepository = projectRepository;
         this.ticketVersionRepository = ticketVersionRepository;
         this.userService = userService;
+        this.deletedTicketRepository = deletedTicketRepository;
     }
 
     public List<TicketResponseDto> findAllTicketsByProject(Long projectId, User user) {
@@ -95,6 +95,11 @@ public class TicketService {
         if (!(ticket.getProject().getId() == project.getId())) {
             throw new OwnershipException("Ticket does not belong to this project");
         }
+
+        DeletedTicket deletedTicket = new DeletedTicket();
+        deletedTicket.setTicketId(ticket.getId());
+        deletedTicket.setCreatedAt(LocalDateTime.now());
+        this.deletedTicketRepository.save(deletedTicket);
         this.ticketRepository.delete(ticket);
     }
 
